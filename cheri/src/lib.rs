@@ -9,6 +9,7 @@
 
 mod intrinsics;
 pub mod ptr;
+pub use cheri_macros::{sealed, Sealed};
 
 /// The CHERI prelude
 ///
