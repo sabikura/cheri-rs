@@ -34,4 +34,4 @@ jobs:
       HOME: /home/morello
     steps:
       - uses: actions/checkout@v4
-      - run: crability cargo check --target aarch64-unknown-none-purecap
+      - run: crability cargo check

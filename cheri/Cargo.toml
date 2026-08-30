@@ -1,0 +1,15 @@
+[package]
+name = "cheri"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+test = false
+doctest = false
+
+[dependencies]
+cheri-macros = { path = "../cheri-macros" }
+
+[dev-dependencies]
+cheri-test = { path = "../cheri-test" }
+aarch64-purecap-rt = { git = "https://github.com/sabikura/aarch64-purecap.git", features = ["hybrid"] }

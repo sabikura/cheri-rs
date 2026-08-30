@@ -1,4 +1,13 @@
-[package]
-name = "cheri"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = ["cheri", "cheri-test"]
+exclude = ["cheri-macros"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[patch."https://github.com/sabikura/cheri-rs.git"]
+cheri = { path = "cheri" }
