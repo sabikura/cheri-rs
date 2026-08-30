@@ -34,4 +34,9 @@ jobs:
       HOME: /home/morello
     steps:
       - uses: actions/checkout@v4
+      - name: Authenticate git for private dependencies
+        run: >
+          git config --global
+          url."https://x-access-token:${{ secrets.GH_DEPS }}@github.com/".insteadOf
+          "https://github.com/"
       - run: crability cargo check
