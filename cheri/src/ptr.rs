@@ -98,6 +98,46 @@ impl core::ops::BitOr for Perms {
     }
 }
 
+/// Sealing capability with a fixed-range pool of object types.
+#[repr(transparent)]
+#[derive(Copy, Clone)]
+pub struct Seal(*mut u8);
+
+impl Seal {
+    pub fn new(root: *mut u8, otypes: core::ops::Range<usize>) -> Self {
+        unsafe {
+            let cap = crate::intrinsics::__cheri_cap_address_set(root, otypes.start as u64);
+            let cap = crate::intrinsics::__cheri_cap_bounds_set_exact(
+                cap,
+                (otypes.end - otypes.start) as u64,
+            );
+            Seal(cap)
+        }
+    }
+
+    pub fn from_cap(cap: *mut u8) -> Self {
+        Seal(cap)
+    }
+
+    pub fn with_otype(self, otype: usize) -> Self {
+        unsafe {
+            Seal(crate::intrinsics::__cheri_cap_address_set(
+                self.0,
+                otype as u64,
+            ))
+        }
+    }
+
+    pub fn otype(&self) -> usize {
+        unsafe { crate::intrinsics::__cheri_cap_address_get(self.0) as usize }
+    }
+
+    pub fn as_ptr(&self) -> *mut u8 {
+        self.0
+    }
+}
+
+/// Trait implemented by the raw pointers type on pure capability ABIs.
 pub trait CheriPtr {
     /// Set the bounds of the capability.
     ///
@@ -130,6 +170,11 @@ pub trait CheriPtr {
     fn with_perms_clear_except(self, perms: Perms) -> Self;
     /// Return the permissions currently held by this capability.
     fn perms(&self) -> Perms;
+    fn seal(self, seal: Seal) -> Self;
+    fn unseal(self, seal: Seal) -> Self;
+    fn is_sealed(&self) -> bool;
+    fn otype(&self) -> i64;
+    fn tag(&self) -> bool;
 }
 
 /// Implement [`CheriPtr`] trait for a pointer type. Both *const and *mut have the same implementation.
@@ -160,6 +205,26 @@ macro_rules! impl_cheri_ptr {
 
             fn perms(&self) -> Perms {
                 Perms(unsafe { crate::intrinsics::__cheri_cap_perms_get(*self as *mut u8) })
+            }
+
+            fn seal(self, seal: Seal) -> Self {
+                unsafe { crate::intrinsics::__cheri_cap_seal(self as *mut u8, seal.0) as $ptr }
+            }
+
+            fn unseal(self, seal: Seal) -> Self {
+                unsafe { crate::intrinsics::__cheri_cap_unseal(self as *mut u8, seal.0) as $ptr }
+            }
+
+            fn is_sealed(&self) -> bool {
+                unsafe { crate::intrinsics::__cheri_cap_sealed_get(*self as *mut u8) }
+            }
+
+            fn otype(&self) -> i64 {
+                unsafe { crate::intrinsics::__cheri_cap_type_get(*self as *mut u8) }
+            }
+
+            fn tag(&self) -> bool {
+                unsafe { crate::intrinsics::__cheri_cap_tag_get(*self as *mut u8) }
             }
         }
     };
