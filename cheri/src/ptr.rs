@@ -25,6 +25,14 @@ pub fn default_data_mut<T: Sized>() -> *mut T {
     unsafe { crate::intrinsics::__cheri_ddc_get() as *mut T }
 }
 
+/// Returns the Program Counter Capability (PCC) as a constant raw pointer.
+///
+/// The returned pointer carries the PCC's tag, bounds, and permissions. Its address is the
+/// address of the instruction that read it.
+pub fn program_counter<T: Sized>() -> *const T {
+    unsafe { crate::intrinsics::__cheri_pcc_get() as *mut T as *const T }
+}
+
 /// A set of capability permissions.
 ///
 /// Permissions are only ever meaningful alongside a valid tag: an untagged capability may still
@@ -44,6 +52,9 @@ pub fn default_data_mut<T: Sized>() -> *mut T {
 pub struct Perms(u64);
 
 impl Perms {
+    /// Capability is global, not local. Local capabilities can only be stored through
+    /// capabilities that hold [`Perms::STORE_LOCAL`]
+    pub const GLOBAL: Self = Perms(1 << 0);
     /// Unseal a sealed capability
     pub const UNSEAL: Self = Perms(1 << 10);
     /// Seal an unsealed capability
